@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import ContentTab from './ContentTab';
 import { useAppContext } from '../hooks/useAppContext';
@@ -58,14 +58,19 @@ type MainTabProps = {
 export default function MainTab({ label, content }: MainTabProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { results } = useAppContext();
+  const ref = useRef(null);
 
   useEffect(() => {
-    if (!results.length){ return;}
+    if (!results.length) {
+      return;
+    }
 
     results.some((result) => {
       const [resultName] = result[0].split('/');
       return resultName === label;
-    }) ? setIsOpen(true) : setIsOpen(false);
+    })
+      ? setIsOpen(true)
+      : setIsOpen(false);
   }, [results, label]);
 
   const formatedLabel = `${isOpen ? '-' : '+'} ${label} (${content.length})`;
@@ -73,7 +78,7 @@ export default function MainTab({ label, content }: MainTabProps) {
 
   return (
     <>
-      <StyledMainTab type={isOpen ? 'active' : ''} onClick={() => setIsOpen((v) => !v)}>
+      <StyledMainTab ref={ref} type={isOpen ? 'active' : ''} onClick={() => setIsOpen((v) => !v)}>
         {formatedLabel}
       </StyledMainTab>
       <ContentContainer active={isOpen ? 'active' : ''}>

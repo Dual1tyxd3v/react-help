@@ -88,9 +88,15 @@ export default function ContentTab({ content, parent }: ContentTabProps) {
   const href = `#content_${label.replace(/ /g, '')}`;
 
   useEffect(() => {
-    if (!query || !ref.current){ return;}
+    if (!query || !ref.current) {
+      return;
+    }
 
-    if ((ref.current as HTMLDivElement).textContent?.includes(query) && tabRef.current) {
+    if (
+      ((ref.current as HTMLDivElement).textContent?.includes(query) ||
+        (tabRef.current as HTMLDivElement).textContent?.includes(query)) &&
+      tabRef.current
+    ) {
       setIsOpen(true);
       addResults([`${parent}/${label}`, tabRef.current]);
     } else {
