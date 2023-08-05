@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { createContext, useCallback, useEffect, useState } from 'react';
 import GlobalStyles from './GlobalStyles';
 import { ContextState, ResultType } from './types';
@@ -24,16 +21,16 @@ const StyledApp = styled.div`
 
 function App() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<ResultType[]>([]);
+  const [results, setResults] = useState<ResultType[] | null>(null);
   const setElement = useScroll();
   const [scroll, setScroll] = useState(0);
 
   // add search results into the store
   const addResults = useCallback(
-    (result: ResultType) => setResults((prev) => [...prev, result]),
+    (result: ResultType) => setResults((prev) => (prev ? [...prev, result] : [result])),
     []
   );
-  function handleScroll () {
+  function handleScroll() {
     setScroll(window.scrollY);
   }
 
@@ -46,7 +43,9 @@ function App() {
 
   // scroll to the 1st founded result
   useEffect(() => {
-    if (!results.length) {return;}
+    if (!results || !results.length) {
+      return;
+    }
 
     setElement(results[0][1]);
   }, [results, setElement]);

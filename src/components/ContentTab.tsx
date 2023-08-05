@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { useEffect, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { useAppContext } from '../hooks/useAppContext';
@@ -87,18 +83,18 @@ export default function ContentTab({ content, parent }: ContentTabProps) {
   const formatedLabel = `${isOpen ? '' : '+'} ${label}`;
   const href = `#content_${label.replace(/ /g, '')}`;
 
+  // if content or title includes query then add this tab to results
   useEffect(() => {
     if (!query || !ref.current) {
       return;
     }
 
     if (
-      ((ref.current as HTMLDivElement).textContent?.includes(query) ||
-        (tabRef.current as HTMLDivElement).textContent?.includes(query)) &&
-      tabRef.current
+      (tabRef.current && (ref.current as HTMLDivElement).textContent?.includes(query)) ||
+      (tabRef.current as HTMLDivElement).textContent?.includes(query)
     ) {
       setIsOpen(true);
-      addResults([`${parent}/${label}`, tabRef.current]);
+      addResults([`${parent}/${label}`, tabRef.current as HTMLDivElement]);
     } else {
       setIsOpen(false);
     }

@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import styled from 'styled-components';
 import { useAppContext } from '../hooks/useAppContext';
 import FoundedItem from './FoundedItem';
@@ -54,7 +51,7 @@ const Anchor = styled.button`
   & span {
     background-color: var(--color-main-light);
     border-radius: 50%;
-    padding: 0 .5rem;
+    padding: 0 0.5rem;
   }
 `;
 
@@ -84,7 +81,9 @@ export default function Aside() {
 
   // switch active buttons in aside block
   useEffect(() => {
-    if (!results.length) {return;}
+    if (!results || !results.length) {
+      return;
+    }
 
     setActiveButton(results[0][0]);
   }, [results]);
@@ -93,7 +92,9 @@ export default function Aside() {
     setActiveButton(label);
   }, []);
 
-  if (!results.length) {return null;}
+  if (!results || !results.length) {
+    return null;
+  }
 
   return (
     <>

@@ -1,7 +1,7 @@
 export type ContextState = {
   query: string;
   setQuery: (v: string) => void;
-  results: ResultType[];
+  results: ResultType[] | null;
   addResults: (v: ResultType) => void;
   resetResults: () => void;
   setElement: (v: HTMLDivElement) => void;

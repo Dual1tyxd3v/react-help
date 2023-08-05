@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import styled, { css } from 'styled-components';
 import { ResultType } from '../types';
 import { useAppContext } from '../hooks/useAppContext';
@@ -52,7 +48,6 @@ export default function FoundedItem({ data, active, setActive }: FoundedItemProp
 
   function clickHandler() {
     setActive(label);
-
     setElement(ref);
   }
   return (

@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { useEffect, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import ContentTab from './ContentTab';
@@ -61,7 +57,7 @@ export default function MainTab({ label, content }: MainTabProps) {
   const ref = useRef(null);
 
   useEffect(() => {
-    if (!results.length) {
+    if (!results) {
       return;
     }
 

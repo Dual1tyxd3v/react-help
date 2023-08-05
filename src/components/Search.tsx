@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import { useAppContext } from '../hooks/useAppContext';
 import styled from 'styled-components';
@@ -42,13 +39,15 @@ export default function Search() {
   }, []);
 
   useEffect(() => {
-    results.length && setPlaceholder(`Founded: ${results.length}`);
-  }, [results]);
+    results && setPlaceholder(`Founded: ${results.length}`);
+  }, [query, results]);
 
   function submitHandler(e: FormEvent) {
     e.preventDefault();
 
-    if (!query){ return;}
+    if (!query) {
+      return;
+    }
 
     resetResults();
     setGlobalQuery(query);

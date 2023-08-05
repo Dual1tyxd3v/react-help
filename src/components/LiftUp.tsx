@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import styled from 'styled-components';
 import { PiMagnifyingGlassBold } from 'react-icons/pi';
 import { useScroll } from '../hooks/useScroll';
