@@ -76,7 +76,7 @@ const Button = styled.button`
 
 export default function Aside() {
   const [activeButton, setActiveButton] = useState('');
-  const { results } = useAppContext();
+  const { results, query } = useAppContext();
   const [isOpen, setIsOpen] = useState(true);
 
   // switch active buttons in aside block
@@ -105,7 +105,7 @@ export default function Aside() {
       )}
       <StyledAside active={isOpen ? 'active' : ''}>
         <AsideHeader>
-          <Title>Founded: {results.length}</Title>
+          <Title>Founded: {results.length}  ({query})</Title>
           <Button onClick={() => setIsOpen((v) => !v)}>x</Button>
         </AsideHeader>
         <ul>
