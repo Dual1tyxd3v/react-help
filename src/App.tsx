@@ -24,6 +24,7 @@ function App() {
   const [results, setResults] = useState<ResultType[] | null>(null);
   const setElement = useScroll();
   const [scroll, setScroll] = useState(0);
+  const [searchElement, setSearchElement] = useState<HTMLInputElement | null>(null);
 
   // add search results into the store
   const addResults = useCallback(
@@ -51,7 +52,18 @@ function App() {
   }, [results, setElement]);
 
   return (
-    <AppContext.Provider value={{ query, setQuery, results, addResults, resetResults, setElement }}>
+    <AppContext.Provider
+      value={{
+        searchElement,
+        setSearchElement,
+        query,
+        setQuery,
+        results,
+        addResults,
+        resetResults,
+        setElement,
+      }}
+    >
       <GlobalStyles />
       <StyledApp>
         <Header />

@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { PiMagnifyingGlassBold } from 'react-icons/pi';
 import { useScroll } from '../hooks/useScroll';
+import { useAppContext } from '../hooks/useAppContext';
 
 const Button = styled.button`
   position: fixed;
@@ -20,9 +21,15 @@ const Button = styled.button`
 
 export default function LiftUp() {
   const setElement = useScroll();
+  const { searchElement } = useAppContext();
+
+  function clickHandler() {
+    setElement(0);
+    searchElement?.focus();
+  }
 
   return (
-    <Button onClick={() => setElement(0)}>
+    <Button onClick={clickHandler}>
       <PiMagnifyingGlassBold />
     </Button>
   );

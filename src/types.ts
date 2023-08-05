@@ -5,6 +5,8 @@ export type ContextState = {
   addResults: (v: ResultType) => void;
   resetResults: () => void;
   setElement: (v: HTMLDivElement) => void;
+  searchElement: HTMLInputElement | null;
+  setSearchElement: (v: HTMLInputElement) => void;
 };
 
 export type ResultType = [string, HTMLDivElement];

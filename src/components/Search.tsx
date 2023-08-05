@@ -31,11 +31,16 @@ const Form = styled.form`
 export default function Search() {
   const [query, setQuery] = useState('');
   const [placeholder, setPlaceholder] = useState('Search...');
-  const { setQuery: setGlobalQuery, results, resetResults } = useAppContext();
+  const { setQuery: setGlobalQuery, results, resetResults, setSearchElement } = useAppContext();
   const ref = useRef(null);
 
   useEffect(() => {
-    ref.current && (ref.current as HTMLInputElement).focus();
+    if (!ref.current) {
+      return;
+    }
+
+    (ref.current as HTMLInputElement).focus();
+    setSearchElement(ref.current as HTMLInputElement);
   }, []);
 
   useEffect(() => {
