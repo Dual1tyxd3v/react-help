@@ -26,6 +26,10 @@ const Input = styled.input`
 const Form = styled.form`
   width: 30%;
   min-width: 20rem;
+
+  @media (max-width: 500px) {
+    width: 80%;
+  }
 `;
 
 export default function Search() {
@@ -41,7 +45,7 @@ export default function Search() {
 
     (ref.current as HTMLInputElement).focus();
     setSearchElement(ref.current as HTMLInputElement);
-  }, []);
+  }, [setSearchElement]);
 
   useEffect(() => {
     results && setPlaceholder(`Founded: ${results.length}`);

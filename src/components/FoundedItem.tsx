@@ -24,6 +24,11 @@ const Button = styled.button<ButtonProps>`
   line-height: 1;
   cursor: pointer;
 
+  @media (max-width: 500px) {
+    /* padding: 1rem 0; */
+    font-size: 2rem;
+  }
+
   &:hover {
     background-color: var(--color-main-active);
   }

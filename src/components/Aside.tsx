@@ -12,12 +12,18 @@ const StyledAside = styled.aside<StyledAsideProps>`
   bottom: 2rem;
   right: -90%;
   width: 30rem;
+  max-height: 85vh;
+  overflow: auto;
   padding: 0.5rem 1rem;
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.8);
   background-color: #000;
   transition: 0.3s all;
+
+  @media (max-width: 500px) {
+    width: 40rem;
+  }
 
   ${(props) => props.active === 'active' && 'right: 2.4vw'}
 `;
@@ -28,6 +34,10 @@ const AsideHeader = styled.div`
   align-items: center;
   padding: 0 2rem;
   margin-bottom: 0.6rem;
+
+  @media (max-width: 500px) {
+    margin-bottom: 1rem;
+  }
 `;
 
 const Title = styled.h3`
@@ -47,6 +57,11 @@ const Anchor = styled.button`
   font-weight: 600;
   padding: 0.5rem 0.5rem;
   border-radius: 8px;
+
+  @media (max-width: 500px) {
+    width: 4rem;
+    font-size: 2.6rem;
+  }
 
   & span {
     background-color: var(--color-main-light);

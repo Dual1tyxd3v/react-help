@@ -10,12 +10,18 @@ const Button = styled.button`
   background-color: transparent;
   border: none;
   cursor: pointer;
+  z-index: 10;
 
   & svg {
     stroke: var(--color-green);
     fill: var(--color-green);
     width: 3rem;
     height: 3rem;
+
+    @media (max-width: 500px) {
+      width: 5rem;
+      height: 5rem;
+    }
   }
 `;
 

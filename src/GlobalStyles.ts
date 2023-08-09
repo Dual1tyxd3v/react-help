@@ -55,6 +55,10 @@ const GlobalStyles = createGlobalStyle`
     font-family: sans-serif;
     color: var(--color-main-light);
     transition: .2s all;
+
+    @media (max-width: 500px) {
+      font-size: 37.5%;
+    }
   }
 
   body {
@@ -81,6 +85,7 @@ const GlobalStyles = createGlobalStyle`
     border-radius: 5px;
     padding: 1rem;
     font-weight: 600;
+    overflow-x: auto;
   }
 `;
 
