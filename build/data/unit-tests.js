@@ -13,6 +13,35 @@ keywords: Array.from(3).fill(null).map(item => {
 });</pre>Функция генератор моковых данных по аналогу каких то данных, возвращает объект. Для получения значений полей используется библиотека faker`
   ],
   [
+    `Имитация fetch API`,
+    `<pre>
+jest.stubGlobal('fetch', (url, options) => new Promise((res, rej) => {
+  res({
+    ok: true,
+    json() {
+      return new Promise((r, _) => r(someObject));
+    }
+  });
+}));</pre>Простая имитация функции fetch, где обязательно указываем статус в виде ok свойства а также заменяем метод json`
+  ],
+  [
+    `Тестирование функционала с DOM API`,
+    `<pre>
+const htmlPath = path.join(process.cwd(), 'index.html');      <sup>1</sup>
+const htmlContent = fs.readFileSync(htmlPath).toString();     <sup>2</sup>
+const window = new Window();          <sup>3</sup>
+const document = window.document;         <sup>4</sup>
+document.write(htmlContent);        <sup>5</sup>
+jest.stubGlobal('document', document);      <sup>6</sup></pre>
+1) создаем переменную которая содержит путь к нужному html файлу по которому будет строиться VDOM<br>
+2) считываем контент<br>
+3) создаем новый экземпляр Window предоставленный библиотекой тестирования<br>
+4) создаем переменную которая будет ссылаться на фейковый экземпляр DOM<br>
+5) заполняем контентом<br>
+6) с помощью специального метода мокаем глобальный API
+7) не забыть в настройке скриптов теста указать флаг --jsdom(jest)/--happy-dom(vitest)`
+  ],
+  [
     `Общий принцип описания тестов`,
     `<pre>
 describe('Function: add', () => {
@@ -38,7 +67,8 @@ describe('Function: add', () => {
     <b>.toHaveProperty(x)</b> - проверяет наличие свойства у проверяемого объекта где х - имя свойства<br>
     <b>.toBeCalled()</b> - проверяет была ли вызвана проверяемая функция<br>
     <b>.toBeCalledTimes(x)</b> - проверяет сколько раз была вызвана проверяемая функция где х количество<br>
-    <b>.toBeCalledWith('test')</b> - проверяет с какими аргументами была вызвана функция`
+    <b>.toBeCalledWith('test')</b> - проверяет с какими аргументами была вызвана функция<br>
+    <b>.toBeInstanceOf(x)</b> - проверка прототипа`
   ],
   [
     `Тестирование асинхронных функций`,
