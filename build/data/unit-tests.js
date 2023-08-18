@@ -71,6 +71,62 @@ describe('Function: add', () => {
     <b>.toBeInstanceOf(x)</b> - проверка прототипа`
   ],
   [
+    `Тестирование reducer`,
+    `<pre>
+describe('someReducer', () => {
+  it('should return init state', () => {
+    const init = {count: 0};
+    const result = someReducer.reducer(undefined, {type: 'incorrect_action'});
+    expect(result).toEqual(init);
+  });
+  it('should reset state', () => {
+    const init = {count: 4};
+    const result = someReducer.reducer(init, reset());
+    expect(result).toEqual({count: 0});
+  });
+  it('should change count value', () => {
+    const init = {count: 0};
+    const result = someReducer.reduce(init, change(4));
+    expect(result).toEqual({count: 4});
+  });
+});</pre>Тестирование редюсера с обычными синхронными action<pre>
+it('shoud return authStatus === 'auth', () => {
+  const init = {authStatus: 'unknown'};
+  const result = authReducer.reducer(init, loginAction.fullfilled);
+  expect(result).toEqual({authStatus: 'auth'});
+});</pre>Тестирование редюсера с асинхронным action. В данном случае проверяется если action прошел успешно<pre>
+const api = createAPI();      <sup>1</sup>
+const mockAPI = new MockAdapter(api);         <sup>2</sup>
+const middlewares = [thunk.withExtraArguments(api)];        <sup>3</sup>
+const mockStore = configureMockStore(middlewares);        <sup>4</sup>
+it('should dispatch requiredAuth and redirectTo ', async () => {
+  const fakeUser = {login: 'test@gmail.com', pass: '12345'};        <sup>5</sup>
+  mockAPI.onPost('/login').reply(200, {token: 'secret'});         <sup>6</sup>
+  const store = mockStore();                <sup>7</sup>
+  Storage.prototype.setItem = jest.fn();              <sup>8</sup>
+  await store.dispatch(loginAction(fakeUser));            <sup>9</sup>
+  const actions = store.getActions().map(({type}) => type);         <sup>10</sup>
+  expect(actions).toEqual([
+    loginAction.pending.type, redirectToRoute.type, loginAction.fullfilled.type         <sup>11</sup>
+  ]);
+  expect(Storage.prototype.setItem).toBeCalledTimes(1);           <sup>12</sup>
+  expect(Storage.prototype.setItem).toBeCalledWith('token_name', 'secret');         <sup>13</sup>
+});</pre>
+1) создаем экземпляр API<br>
+2) создаем моковый адаптер для api для имитации запросов на сервер<br>
+3) создаем массив с middleware где указываем thunk с нашим api<br>
+4) конфигурируем моковый стор<br>
+5) создаем фейковые данные для отправки на сервер<br>
+6) ???<br>
+7) создаем экземпляр store<br>
+8) по скольку в обработчике action используется браузерный API для работы с localStorage а nodejs не знает что это такое, то мы просто заменяем нужный метод моковым пустым методом<br>
+9) диспатчим action<br>
+10) получаем массив всех выполненных action забирая только поле type<br>
+11) проверяем полученный результат со своим, где порядок вызовов action важен<br>
+12) проверяем был ли вызван метод взаимодействия с localStorage<br>
+13) проверяем с какими аргументами был вызван метод`
+  ],
+  [
     `Тестирование асинхронных функций`,
     `<b>Обычный callback</b><pre>
 it('...', (done) => {       <sup>1</sup>
