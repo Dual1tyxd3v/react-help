@@ -25,6 +25,46 @@ jest.stubGlobal('fetch', (url, options) => new Promise((res, rej) => {
 }));</pre>Простая имитация функции fetch, где обязательно указываем статус в виде ok свойства а также заменяем метод json`
   ],
   [
+    `Тестирование компонента`,
+    `<pre>
+it('should render correctly', () => {
+  const history = createMemoryHistory();    <sup>1</sup>
+  render(           <sup>2</sup>
+    &lt;HistoryRouter history={history}&gt;
+      &lt;NotFoundComponent /&gt;
+    &lt;/HistoryRouter&gt;
+  );
+  const header = screen.getByText('404');     <sup>3</sup>
+  expect(header).toBeInTheDocument();       <sup>4</sup>
+});</pre>
+1) создаем фейковый history если компонент взаимодействует с HistoryRouter(Link)<br>
+2) фунция render отрисовывает переданную разметку<br>
+3) объект screen позволяет взаимодействовать с результатом рендера как если бы это был экран приложения. Там мы ищем переданный текст и сохраняем в переменную<br>
+4) проверяем находится ли сохраненный элемент в DOM<pre>
+it('should render AuthScreen when user navigate to /login', async () => {
+  const mockStore = configureMockStore();     <sup>1</sup>
+  const history = createMemoryHistory();
+  history.push('/login');         <sup>2</sup>
+  render(
+    &lt;Provider store={mockStore}&gt;
+      &lt;HistoryRouter history={history}&gt;
+        &lt;AuthScreen /&gt;
+      &lt;HistoryRouter /&gt;
+    &lt;/Provider&gt;
+  );
+  expect(screen.getByLabelText(/Логин/i)).toBeInTheDocument;      <sup>3</sup>
+  await userEvent.type(screen.getByTestID('login'), 'test');      <sup>4</sup>
+  expect(screen.getByDisplayValue(/test/i)).toBeInTheDocument;    <sup>5</sup>
+});</pre>
+1) если компонент использует глобальное состояние то делаем моковый store<br>
+2) имитируем переход в history по другому адресу<br>
+3) проверяем находится ли в DOM элемент с label текстом<br>
+4) имитируем с помощью библиотеки userEvent ввод данных в поле где<br>
+-- 1 аргумент элемент с которым взаимодействуем (поиск происходит по дата атрибуту - data-testid="login")<br>
+-- 2 аргумент значение<br>
+5) с помощью метода getByDisplayValue результата рендера проверяем были ли введены указаные данные`
+  ],
+  [
     `Тестирование функционала с DOM API`,
     `<pre>
 const htmlPath = path.join(process.cwd(), 'index.html');      <sup>1</sup>
@@ -224,14 +264,16 @@ describe('middleware - redirect', () => {
   });
   it('should be redirect to /login', () => {
     store.dispatch(redirectToRoute('/login'));
-    expect(fakeHistory.location.pathname).toBe('/login);
-    expect(store.getActions()).toEqual([redirectToRoute['/login']]);
+    expect(fakeHistory.location.pathname).toBe('/login);    <sup>5</sup>
+    expect(store.getActions()).toEqual([redirectToRoute['/login']]);    <sup>6</sup>
   });
 });
 </pre>1)Создаем имитацию browserHistory который не может быть вызван в node.js. По сути просто объект с свойством и методом для его обновления<br>
 2)Переключатель используется когда тестовая ф-ция обращается к какой то импортируемой сущности которая не может быть вызвана вместо нее будет вызвана имитация. В 1 аргументе принимает путь импортируемой сущности во 2 callback которая вернет имитацию<br>
 3)Создаем моковый store в который передаем массив с middleware и далее создаем экземпляр этого store<br>
 4)Ф-ция позволяет перед каждым вызовом it произвести какую то операцию. В нашем случае очистить историю<br>
+5)Проверяем изменился ли путь<br>
+6)Проверяем какой action был вызван<br>
 В самом тесте мы сначала диспатчим action с редиректом передав путь а затем проверяем сначала на то изменилось ли поле нашего fakeHistory и был ли вызван dispatch вообще`
   ],
 ];
