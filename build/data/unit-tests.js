@@ -25,6 +25,77 @@ jest.stubGlobal('fetch', (url, options) => new Promise((res, rej) => {
 }));</pre>Простая имитация функции fetch, где обязательно указываем статус в виде ok свойства а также заменяем метод json`
   ],
   [
+    `Тестирование хука`,
+    `<pre>
+it('should return array with 2 elements', () => {
+  const {result} = renderHook(() => useSomeHook(someData));     <sup>1</sup>
+  const [data, setData] = result.current;         <sup>2</sup>
+  expect(result.current).toBeLength(2);       <sup>3</sup>
+  expect(data).toBeInstanceOf(Array);         <sup>4</sup>
+  expect(setData).toBeInstanceOf(Function);
+});</pre>
+1) чтобы проверить хук его сначала нужно как бы отрендерить. Если хук принимает какие то данные то используем callback<br>
+2) все что возвращает хук содержится в свойстве current объекта result<br>
+3) проверяем что масси current содержит 2 элемента<br>
+4) проверяем что переменные из хука являются нужными нам сущностями`
+  ],
+  [
+    `Тестирование Private Route`,
+    `<pre>
+const mockStore = configureMockStore();
+const history = createMemoryHistory();
+it('should render public route when authStatus is not auth', () => {
+  const store = mockStore({
+    USER: { authStatus: 'unknown' }
+  });
+  history.push('/private');
+  render(
+    &lt;Provider store={store}&gt;
+      &lt;HistoryRouter history={history}&gt;
+        &lt;Routes&gt;          <sup>1</sup>
+          &lt;Route path='/login' element={&lt;p&gt;public&lt;/p&gt;} /&gt;
+          &lt;Route path='/private' element={
+            &lt;PrivateRoute&gt;
+              &lt;p&gt;private&lt;/p&gt;
+            &lt;/PrivateRoute&gt;
+          } /&gt;
+        &lt;Routes /&gt;
+      &lt;HistoryRouter /&gt;
+    &lt;Provider /&gt;
+  );
+  expect(screen.getByText(/public/i)).toBeInTheDocument();
+  expect(screen.queryByText(/private/i)).not.toBeInTheDocument();     <sup>2</sup>
+});</pre>
+Для проверки PrivateRoute стоит написать несколько тестов с разным значением authStatus в данном примере<br>
+1) описываем каждый роут где в место целевого элемента достаточно указать моковые данные<br>
+2) если необходимо проверить отсутствие какого то элемента то следует использовать метод queryBy... потому что в случае если элемент не будет найден он вернет null, а метод getBy... выбрасывает ошибку`
+  ],
+  [
+    `Тестирование маршрутизации`,
+    `<pre>
+const mockStore = configureMockStore();
+const store = mockStore({     <sup>1</sup>
+  USER: { authStatus: 'auth' },
+  DATA: { isDataLoaded: false }
+});
+const history = createMemoryHistory();
+const fakeApp = (       <sup>2</sup>
+  &lt;Provider store={store}&gt;
+    &lt;HistoryRouter history={history}&gt;
+      &lt;App /&gt;
+    &lt;HistoryRouter /&gt;
+  &lt;Provider /&gt;
+);
+it('should render main page when user navigate to "/"', () => {
+  history.push('/');      <sup>3</sup>
+  render(fakeApp);
+  expect(screen.getByText(/Main page/i)).toBeInTheDocument();       <sup>4</sup>
+});</pre>
+1) конфигурируем моковый store указав необходимые начальные данные для компонента<br>
+2) указываем начальную разметку в переменную чтобы легче было использовать в последующих тестах<br>
+3) для каждого роута проверяем наличие конкретных элементов в результате рендера`
+  ],
+  [
     `Тестирование компонента`,
     `<pre>
 it('should render correctly', () => {
@@ -108,7 +179,10 @@ describe('Function: add', () => {
     <b>.toBeCalled()</b> - проверяет была ли вызвана проверяемая функция<br>
     <b>.toBeCalledTimes(x)</b> - проверяет сколько раз была вызвана проверяемая функция где х количество<br>
     <b>.toBeCalledWith('test')</b> - проверяет с какими аргументами была вызвана функция<br>
-    <b>.toBeInstanceOf(x)</b> - проверка прототипа`
+    <b>.toBeInstanceOf(x)</b> - проверка прототипа<br>
+    <b>.toBeInTheDocument()</b> - проверяет наличие какого то элемента в DOM<br>
+    <b>.toBeLength(x)</b> - проверяет на количество элементов в массиве где х - число<br>
+    <b>.toBeInstanceOf(x)</b> - сверяет тип проверяемой переменной с указаной сущностью`
   ],
   [
     `Тестирование reducer`,
