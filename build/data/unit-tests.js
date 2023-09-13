@@ -37,7 +37,17 @@ it('should return array with 2 elements', () => {
 1) чтобы проверить хук его сначала нужно как бы отрендерить. Если хук принимает какие то данные то используем callback<br>
 2) все что возвращает хук содержится в свойстве current объекта result<br>
 3) проверяем что масси current содержит 2 элемента<br>
-4) проверяем что переменные из хука являются нужными нам сущностями`
+4) проверяем что переменные из хука являются нужными нам сущностями<pre>
+it('should correctly change state', () => {
+  const {result} = renderHook(() => useSomeHook(someData));
+  const [initState] = result.current;
+  let [, setState] = result.current;
+  act(() => setState(4));
+  let [, setState] = result.current;
+  const [newState] = result.current;
+  expect(initState).not.toBe(newState);
+});</pre>
+В данном примере act используется для вызова функции из хука. После каждого вызова такой функции необходимо заного обновлять все что возвращает хук`
   ],
   [
     `Тестирование Private Route`,
@@ -96,8 +106,61 @@ it('should render main page when user navigate to "/"', () => {
 3) для каждого роута проверяем наличие конкретных элементов в результате рендера`
   ],
   [
-    `Тестирование компонента`,
+    `Тестирование с ререндером`,
     `<pre>
+it('should rerender correctly', async () => {
+  const onCHange = jest.fn();
+  const {rerender} = render(      <sup>1</sup>
+    &lt;SomeComponentWithCheckbox onChange={onChange} /&gt;
+  );
+  expect(screen.getByRole('checkbox')).not.toBeChecked();
+  await userEvent.click(screen.getByRole('checkbox'));
+  expect(onChange).toBeCalled();
+  rerender(           <sup>2</sup>
+    &lt;SomeComponentWithCheckbox onChange={onChange} /&gt;
+  );
+  expect(screen.getByRole('checkbox')).toBeChecked();
+});</pre>
+1) первый рендер происходит через присвоение результата в переменную для возможности перерендерить компонент и проверить props
+2) сам ререндер. В данном случае можно передавать другие пропсы`
+  ],
+  [
+    `Тестирование компонента с медиа`,
+    `<pre>
+describe('Component: AudioPlayer', () => {
+  beforeEach(() => {        <sup>1</sup>
+    window.HTMLMediaElement.prototype.play = jest.fn();
+    window.HTMLMediaElement.prototype.pause = jest.fn();
+  });
+  const mockPath = 'fakePath';
+  it('should render correctly', () => {       <sup>2</sup>
+    render(
+      &lt;AudioPlayer ... src={mockPath} onPlay={jest.fn()} /&gt;
+    );
+    expect(screen.getByRole('button')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toHaveAttribute('disabled');
+    expect(screen.getByRole('button')).toHaveClass('some-class');
+  });
+  it('should play melody when data is loaded', async () => {      <sup>3</sup>
+    const playBtn = jest.fn();
+    render(
+      &lt;AudioPlayer ... src={mockPath} onPlay={playBtn} /&gt;
+    );
+    fireEvent(screen.getByTestId('audio'), new Event('loadeddata'));      <sup>4</sup>
+    expect(screen.getByRole('button')).not.toHaveAttribute('disabled');
+    await userEvent.click(screen.getByRole('button'));
+    expect(playBtn).toBeCalled();
+  });
+});</pre>
+1) сначала делаем заглушки на прототипе медиа элемента<br>
+2) просто проверяем на корректный рендер<br>
+3) проверка на корректную отрисовку при условии что медиа данные были загружены
+4) функция позволяет имитировать события где 1 аргумент - элемент на котором произошло событие, 2 аргумент - само событие<br>
+Далее просто проверяем что клик по кнопке был осуществлён и функция заглушка была вызвана`
+  ],
+  [
+    `Тестирование компонента`,
+    `Проверка корректности рендера<pre>
 it('should render correctly', () => {
   const history = createMemoryHistory();    <sup>1</sup>
   render(           <sup>2</sup>
@@ -111,7 +174,8 @@ it('should render correctly', () => {
 1) создаем фейковый history если компонент взаимодействует с HistoryRouter(Link)<br>
 2) фунция render отрисовывает переданную разметку<br>
 3) объект screen позволяет взаимодействовать с результатом рендера как если бы это был экран приложения. Там мы ищем переданный текст и сохраняем в переменную<br>
-4) проверяем находится ли сохраненный элемент в DOM<pre>
+4) проверяем находится ли сохраненный элемент в DOM<hr>
+Взаимодействие с полями ввода<pre>
 it('should render AuthScreen when user navigate to /login', async () => {
   const mockStore = configureMockStore();     <sup>1</sup>
   const history = createMemoryHistory();
@@ -120,7 +184,7 @@ it('should render AuthScreen when user navigate to /login', async () => {
     &lt;Provider store={mockStore}&gt;
       &lt;HistoryRouter history={history}&gt;
         &lt;AuthScreen /&gt;
-      &lt;HistoryRouter /&gt;
+      &lt;/HistoryRouter&gt;
     &lt;/Provider&gt;
   );
   expect(screen.getByLabelText(/Логин/i)).toBeInTheDocument;      <sup>3</sup>
@@ -133,7 +197,23 @@ it('should render AuthScreen when user navigate to /login', async () => {
 4) имитируем с помощью библиотеки userEvent ввод данных в поле где<br>
 -- 1 аргумент элемент с которым взаимодействуем (поиск происходит по дата атрибуту - data-testid="login")<br>
 -- 2 аргумент значение<br>
-5) с помощью метода getByDisplayValue результата рендера проверяем были ли введены указаные данные`
+5) с помощью метода getByDisplayValue результата рендера проверяем были ли введены указаные данные<hr>
+Взаимодействие с кнопкой<pre>
+it('should redirect when user click button', async () => {
+  const history = createMemoryHistory();
+  history.push('/some');
+  render(
+    &lt;HistoryRouter history={history} &gt;
+      &lt;Routes&gt;
+        &lt;Route path='/some' element={&lt;SomeComponent /&gt;} /&gt;
+        &lt;Route path='/another' element={&lt;p&gt;another page&lt;/p&gt;} /&gt;
+      &lt;/Routes&gt;
+    &lt;/HistoryRouter&gt;
+  );
+  await userEvent.click(screen.getByRole('button'));
+  expect(screen.getByText(/another page/i)).toBeInTheDocument();
+});</pre>
+С помощью userEvent и его метода click можем имитировать нажатие на какой либо элемент. Получаем кнопку с помощью метода getByRole по тэгу`
   ],
   [
     `Тестирование функционала с DOM API`,
@@ -182,7 +262,8 @@ describe('Function: add', () => {
     <b>.toBeInstanceOf(x)</b> - проверка прототипа<br>
     <b>.toBeInTheDocument()</b> - проверяет наличие какого то элемента в DOM<br>
     <b>.toBeLength(x)</b> - проверяет на количество элементов в массиве где х - число<br>
-    <b>.toBeInstanceOf(x)</b> - сверяет тип проверяемой переменной с указаной сущностью`
+    <b>.toBeInstanceOf(x)</b> - сверяет тип проверяемой переменной с указаной сущностью<br>
+    <b>.toStrictEqual(x)</b> - позволяет проверить массив по значениям`
   ],
   [
     `Тестирование reducer`,
