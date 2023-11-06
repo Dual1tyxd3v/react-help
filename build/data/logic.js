@@ -99,6 +99,146 @@ return {[newV]: del, ...result}
 const addValue = ({...val}, obj) => {...obj, ...val}</pre>`
   ],
   [
+    `Оценка сложности алгоритмов`,
+    `Оценка всегда производится исходя из наихудшего варианта(О). При оценке необходимо придерживаться нескольких правил:<br>
+    1) отбрасывание констант - когда например в алгоритме имеется несколько n циклов, тогда сложность по идее будет О(x*n), но в результате х как константу отбрасываем и получаем O(n)<br>
+    2) drop non-dominant - когда из нескольих операций выбирается наиболее весомый. Например в алгоритме имеется обычный цикл и еще 1 цикл с вложенным. Вместо O(n + n*n) мы получим O(n*n) тем самым оставив наиболее тяжелый вариант<br>
+    O(n) - прямолинейная сложность и зависит от n. Например проход по массиву зависит от длины массива(n)<br>
+    O(n*n) - более сложный вариант когда используется вложенный цикл<br>
+    O(1) - когда сложность не зависит не от чего и количество операций всегда постоянно<br>
+    O(log n) - сложность приближенная к O(1). Подход разделяй и властвуй, например используется в поиске по массиву с использованием бинарной сортировки`
+  ],
+  [
+    `Реализация связного списка (LL)`,
+    `<pre>
+class Node {      <sup>1</sup>
+  constructor(v) {
+    this.value = v;
+    this.next = null;
+  }
+}
+
+class LinkedList {
+  constructor(v) {    <sup>2</sup>
+    const node = new Node(v);
+    this.head = node;
+    this.tail = node;
+    this.length = 1;
+  }
+
+  push(v) {           <sup>3</sup>
+    const node = new Node(v);
+    if (!this.length) {
+      this.head = node;
+    } else {
+      this.tail.next = node;
+    }
+    this.tail = node;
+    this.length++;
+    return this;
+  }
+
+  pop() {         <sup>4</sup>
+    if (!this.length) return undefined;
+    let temp = this.head;
+    let prev = this.head;
+    while(temp.next) {
+      temp = temp.next;
+      prev = temp;
+    }
+    prev.next = null;
+    this.tail = prev;
+    this.length--;
+    if (!this.length) {
+      this.head = null;
+      this.tail = null;
+    }
+    return temp;
+  }
+
+  unshift(v) {      <sup>5</sup>
+    const node = new Node(v);
+    if (!this.length) {
+      this.head = node;
+      this.tail = node;
+    } else {
+      node.next = this.head;
+      this.head = node;
+    }
+    this.length++;
+    return this;
+  }
+
+  shift() {     <sup>6</sup>
+    if (!this.length) return undefined;
+    const temp = this.head;
+    this.head = temp.next;
+    temp.next = null;
+    this.length--;
+    if (!this.length) this.tail = null;
+    return temp;
+  }
+
+  get(i) {      <sup>7</sup>
+    if (i >= this.length || i < 0) return undefined;
+    let temp = this.head;
+    for(let k = 0; k < i; k++) {
+      temp = temp.next;
+    }
+    return temp;
+  }
+
+  set(i, v) {     <sup>8</sup>
+    const node = this.get(i);
+    if (!node) return false;
+    node.value = v;
+    return true;
+  }
+
+  insert(i, v) {      <sup>9</sup>
+    if (i < 0 || i > this.length) return false;
+    if (i === 0) return this.unshift(v);
+    if (i === this.length) return this.push(v);
+    const prev = this.get(i - 1);
+    const node = new Node(v);
+    node.next = prev.next;
+    prev.next = node;
+    this.length++;
+    return true;
+  }
+
+  remove(i) {       <sup>10</sup>
+    if (i < 0 || i >= this.length) return undefined;
+    if (i === 0) return this.shift();
+    if (i === this.length - 1) return this.pop();
+    const prev = this.get(i - 1);
+    const temp = prev.next;
+    prev.next = temp.next;
+    temp.next = null;
+    this.length--;
+    return temp;
+  }
+
+  reverse() {       <sup>11</sup>
+    let temp = this.head;
+    this.head = this.tail;
+    this.tail = this.head;
+    let prev = null;
+    let next = this.head;
+    for (let i = 0; i < this.length; i++) {
+      next = temp.next;
+      temp.next = prev;
+      prev = temp;
+      temp = temp.next;
+    }
+    return this;
+  }
+}</pre>
+1) сначала создаем отдельный класс для каждого элемента списка (нода/узел) в котором определяем переданое значение и свойство next указывающее на null<br>
+2) в конструкторе создаем новый нод и указываем что голова и хвост списка указывают на него. Также увеличиваем длину списка<br>
+3) при добавлении в конец списка создаем новую ноду. Затем проверяем если список пуст то указываем что голова ссылается на ноду, если же нет то указываем что next хвоста указывает на ноду. В конце сдвигаем хвост и увеличиваем длину списка`
+  ],
+  [
     `Функция преобразования числа в строку`,
     `<pre>
 const myToString = num => {
@@ -118,24 +258,24 @@ const myToString = num => {
     `Функция фибоначчи`,
     `<pre>
 function fibRecursive(n) {
-if (n === 0) return 0;
-if (n === 1) return 1;
-return fibRecursive(n - 1) + fibRecursive(n - 2);
+  if (n === 0) return 0;
+  if (n === 1) return 1;
+  return fibRecursive(n - 1) + fibRecursive(n - 2);
 }
 
 function fib(n) {
-if (n === 0) return 0;
-if (n === 1) return 1;
-let result = 1;
-let i = 2;
-let prev = 0;
-while (i <= n) {
-  let temp = result;
-  result += prev;
-  prev = temp;
-  i++;
-}
-return result;
+  if (n === 0) return 0;
+  if (n === 1) return 1;
+  let result = 1;
+  let i = 2;
+  let prev = 0;
+  while (i <= n) {
+    let temp = result;
+    result += prev;
+    prev = temp;
+    i++;
+  }
+  return result;
 }</pre>`
   ]
 ];
