@@ -256,6 +256,150 @@ class LinkedList {
 Разворот - O(n)`
   ],
   [
+    `Реализация стэка(stack)`,
+    `<pre>
+class Node {
+  constructor(v) {      <sup>1</sup>
+    this.value = v;
+    this.next = null;
+  }
+}
+class Stack {
+  constructor(v) {        <sup>2</sup>
+    const node = new Node(v);
+    this.top = node;
+    this.length = 1;
+  }
+
+  push(v) {         <sup>3</sup>
+    const node = new Node(v);
+    node.next = this.top;
+    this.top = node;
+    this.length++;
+    return this;
+  }
+
+  pop() {       <sup>4</sup>
+    if (!this.length) return undefined;
+    const temp = this.top;
+    this.top = temp.next;
+    temp.next = null;
+    this.length--;
+    return temp;
+  }
+}</pre>
+1) сначала создаем отдельный класс для элементов стэка. По сути это тот же связный список поэтому структура элементов не меняется<br>
+2) конструктор самого стэка почти идентичен связному списку и имеет 1 отличие - вместо головы и хвоста имеется только свойство обозначающее вершину стэка<br>
+3) чтобы добавить элемент сначала создаем новый нод, затем связываем его с вершиной стэка, сдвигаем вершину и увеличиваем длину стэка<br>
+4) чтобы удалить элемент сначала проверяем не пустой ли стэк. Если нет, сохраняем в переменную искомый элемент, убираем между ним и стэком связи, уменьшаем длину стэка и возвращаем элмемент`
+  ],
+  [
+    `Реализация очереди(queue)`,
+    `<pre>
+class Node {      <sup>1</sup>
+  constructor(v) {
+    this.value = v;
+    this.next = null;
+  }
+}
+class Queue {
+  constructor(v) {        <sup>2</sup>
+    const node = new Node(v);
+    this.length = 1;
+    this.first = node;
+    this.last = node;
+  }
+
+  enqueue(v) {      <sup>3</sup>
+    const node = new Node(v);
+    if (!this.length) {
+      this.first = node;
+    } else {
+      this.last.next = node;
+    }
+    this.last = node;
+    this.length++;
+    return this;
+  }
+
+  dequeue() {       <sup>4</sup>
+    if (!this.length) return undefined;
+    const temp = this.first;
+    this.first = temp.next;
+    temp.next = null;
+    this.length--;
+    if (!this.length) {
+      this.last = null;
+    }
+    return temp;
+  }
+}</pre>
+1) конструктор элементов очереди такой же как у связного списка<br>
+2) конструктор самой очереди почти такой же как и у связного списка, только вместо головы и хвоста у нас теперь first и last свойства<br>
+3) чтобы добавить элемент создаем ноду, проверяем не пустая ли очередь, если да то указываем first, если нет то просто добавляем последнему элементу ссылку на ноду, сдвигаем last и увеличиваем длину очереди<br>
+4) чтобы убрать элемент сначала проверяем не пустая ли очередь. Далее сохраняем в переменную искомый элемент, сдвигаем first, убираем связь между элементом и очередью и уменьшаем длину очереди`
+  ],
+  [
+    `Реализация бинарного дерева(BT)`,
+    `<pre>
+class Node {
+  constructor(v) {        <sup>1</sup>
+    this.value = v;
+    this.left = null;
+    this.right = null;
+  }
+}
+class BinaryTree {
+  constructor() {         <sup>2</sup>
+    this.root = null;
+  }
+
+  insert(v) {       <sup>3</sup>
+    const node = new Node(v);
+    if (!this.root) {
+      this.root = node;
+      return this;
+    }
+    let temp = this.root;
+    while(true) {
+      if (node.value === temp.value) return undefined;
+      if (node.value > temp.value) {
+        if (!temp.right) {
+          temp.right = node;
+          return this;
+        }
+        temp = temp.right;
+      } else {
+        if (!temp.left) {
+          temp.left = node;
+          return this;
+        }
+        temp = temp.left;
+      }
+    }
+  }
+
+  contains(v) {       <sup>4</sup>
+    if (!this.root) return false;
+    let temp = this.root;
+    while(temp) {
+      if (v === temp.value) return true;
+      if (v > temp.value) {
+        temp = temp.right;
+      } else {
+        temp = temp.left;
+      }
+    }
+    return false;
+  }
+}</pre>
+В бинарном дереве каждый нод имеет только 1 родителя и 2 ребенка. Для удобства обычно помещают меньшие элементы слева а большие справа. В случае если добавляется элемент с уже существующим значением, тогда либо ничего не делают, либо добавляют счетчик(count) на элемент и увеличивают его. Полное дерево это когда у всех нод либо 2 либо 0 детей. Идеальное дерево это когда все ветки дерева имеют одинаковую длину<br>
+1) конструкто ноды помимо поля со значением также имеет поля left и right<br>
+2) конструктор самого дерева создает только пустой root<br>
+3) метод для добавления элементов. Создаем ноду, проверяем пустое ли дерево. Если да то просто указываем в root ноду. Если нет сначала создаем временную переменную которая будет указывать на начальную позицию в дереве. Затем в бесконечном цикле сначала проверяем не являются ли переданое значение и значение из временой переменной равны. Если да то выходим из цикла без результата, если нет идем дальше и сравниваем значения после чего сдвигаем переменную ниже (left/right). Так происходит до того момента пока не найдем свободное место куда и присвоим новый нод<br>
+4) чтобы проверить на наличие элемента в дереве сначала проверяем не пустое ли оно. Если нет с помощью цикла углубляемся внутрь дерева в зависимости от сравнения искомого значения и значения в переменной указателе. Так происходит до тех пор пока либо не будет найдено искомое либо пока не упремся в пустоту`
+  ],
+  [
     `Реализация двусвязного списка (DLL)`,
     `<pre>
 class Node {      <sup>1</sup>
