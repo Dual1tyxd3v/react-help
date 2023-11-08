@@ -1167,38 +1167,38 @@ const {name: newVar, age: newAge = 12} = object;</pre>Деструктуриза
     `Методы сортировки массива`,
     `<b>Пузырьковая сортировка</b><pre>
 function sort(arr) {
-for(let i = arr.length - 1; i > 0; i--) {
-  for(let j = 0; j < i; j++) {
-    if (arr[j] > arr[j + 1]) {
-      [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+  for(let i = arr.length - 1; i > 0; i--) {
+    for(let j = 0; j < i; j++) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+      }
     }
   }
-}
-return arr;
+  return arr;
 }</pre>Принцип сортировки таков - проходим по массиву несколько раз, при этом каждый раз берем первые 2 элемента и сравниваем их. Наибольший элемент смещаем к концу массива а затем сравниваем следующую пару элементов. В итоге после каждого прохода у нас в конце будет оставаться самый большой элемент. Сложность сортировки O(n*n)<hr>
 <b>Выборочная сортировка</b><pre>
 function sort(arr) {
-for (let i = 0; i < arr.length - 1; i++) {
-  let min = i;
-  for (let j = i + 1; j < arr.length; j++) {
-    min = arr[min] < arr[j] ? min : j;
+  for (let i = 0; i < arr.length - 1; i++) {
+    let min = i;
+    for (let j = i + 1; j < arr.length; j++) {
+      min = arr[min] < arr[j] ? min : j;
+    }
+    [arr[i], arr[min]] = [arr[min], arr[i]];
   }
-  [arr[i], arr[min]] = [arr[min], arr[i]];
-}
 }</pre>
 Принцип таков - делаем несколько проходов по массиву и каждый раз находим наибольший или наименьший элемент и помещаем его в конец или в начало массива. Сложность O(n*n)<hr>
 <b>Сортировка вставками</b><pre>
 function sort(arr) {
-for (let i = 1; i < arr.length; i++) {
-    const current = arr[i];
-    let j = i;
-    while (j > 0 && arr[j - 1] > current) {
-        arr[j] = arr[j - 1];
-        j--;
-    }
-    arr[j] = current;
-}
-return arr;
+  for (let i = 1; i < arr.length; i++) {
+      const current = arr[i];
+      let j = i;
+      while (j > 0 && arr[j - 1] > current) {
+          arr[j] = arr[j - 1];
+          j--;
+      }
+      arr[j] = current;
+  }
+  return arr;
 };</pre>
 Последовательно берет каждый элемент массива и сравнивает с элементами левой части от себя. Таким образом как бы ищет место элементу в левой части которая уже является отсортированной<hr>
 <b>Сортировка слиянием</b><br>
@@ -1206,18 +1206,18 @@ return arr;
 Сначала массив делится на равные части, затем еще раз и еще раз пока в каждой части не останется по 1 элементу. Затем массивы сравниваются по нулевому индексу и тот кто меньше уходит в объедененный массив и так продолжается пока в конечном счете не останется 1 массив. Сложность O(nlog(n))<hr>
 <b>Быстрая сортировка</b><pre>
 function quick(arr) {
-if (arr.length <= 1) return arr;
-const left = [], right = [];
-const pivot = arr[0];
-for (let i = 1; i < arr.length; i++) {
-  if (arr[i] > pivot) {
-    right.push(arr[i]);
+  if (arr.length <= 1) return arr;
+  const left = [], right = [];
+  const pivot = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > pivot) {
+      right.push(arr[i]);
+    }
+    if(arr[i] < pivot) {
+      left.push(pivot);
+    }
   }
-  if(arr[i] < pivot) {
-    left.push(pivot);
-  }
-}
-return [...quick(left), pivot, ...quick(right)];
+  return [...quick(left), pivot, ...quick(right)];
 }</pre>Принцип таков - сначала берем рандомный элемент(например 1), и затем последовательно сравниваем его с каждым другим элементами и затем распределяем элементы массива те что меньше первого в массив left, те что больше в right. После чего возвращаем объедененный массив где сначала рекурсивно прогоняем также left и right массивы
 `
   ],
