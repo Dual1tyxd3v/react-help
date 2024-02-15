@@ -841,7 +841,14 @@ currency - валюты<br>
     1) beforebegin<br>
     2) afterbegin<br>
     3) beforeend<br>
-    4) afterend`
+    4) afterend<br>
+    В случае если необходимо добавить элемент в виде строки HTML разметки лучше использовать этот метод чем менять innerHTML. Дело в том что при использовании последнего каждый раз когда происходит обновление/перезапись, то все элементы находящиеся уже в разметке теряют связь с ссылкой на него в JS<pre>
+    const div = document.querySelector('div');
+    div.innerHTML = '&lt;span&gt;some text&lt;/span&gt';
+    const span = div.querySelector('span');
+    div.innerHTML += '&lt;span&gtnew text&lt;/span&gt';
+    span.textContent = 'edited first text';</pre>
+    В данном случае изменить содержимое 1 спана будет невозможно т.к. при добавлении новой строки в innerHMTL связь элемента будет потеряна`
   ],
   [
     `async/await`,

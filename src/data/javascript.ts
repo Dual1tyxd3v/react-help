@@ -841,7 +841,7 @@ currency - валюты<br>
     1) beforebegin<br>
     2) afterbegin<br>
     3) beforeend<br>
-    4) afterend`
+    4) afterend<br>`
   ],
   [
     `async/await`,
