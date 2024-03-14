@@ -3,10 +3,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // import data from '../data/data';
 import MainTab from './MainTab';
+import data from '../data/data';
 
 export default function Main() {
-  const data = {Git, Html, Css, Javascript, JQUERY, ReactData, Sass, Logic, TypeScript, Unit_Tests} ;
-
   const preparedData = Object.keys(data);
 
   return (
