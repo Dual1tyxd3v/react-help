@@ -90,8 +90,9 @@ export default function ContentTab({ content, parent }: ContentTabProps) {
     }
 
     if (
-      (tabRef.current && (ref.current as HTMLDivElement).textContent?.includes(query)) ||
-      (tabRef.current as HTMLDivElement).textContent?.includes(query)
+      (tabRef.current &&
+        (ref.current as HTMLDivElement).textContent?.toLowerCase().includes(query.toLowerCase())) ||
+      (tabRef.current as HTMLDivElement).textContent?.toLowerCase().includes(query.toLowerCase())
     ) {
       setIsOpen(true);
       addResults([`${parent}/${label}`, tabRef.current as HTMLDivElement]);

@@ -356,6 +356,205 @@ App.vue<pre>
 const {collection, addColl} = useMy();</pre>`,
   ],
   [
+    `Роутинг`,
+    `Сначала создается отдельная сущность роутера<br>
+    router.js<pre>
+let user = 'Bob';
+export const router = createRouter({
+  history: createWebHistory(),    <sup>1</sup>
+  routes: [
+    { path: '/', name: 'home', component: Home },     <sup>2</sup>
+    { path: '/about', name: 'about', component: () => import './....'},    <sup>3</sup>
+    {
+      path: '/some',
+      name: 'some',
+      component: ...,
+      children: [         <sup>8</sup>
+        { path: 'another', component: Another, name: 'another' }
+      ],
+      beforeEnter: (to, from, next) => {      <sup>6</sup>
+        if (!to.query?.key) {
+          to.query = { key: 123 }
+        }
+        next();
+      }
+    },
+    {
+      path: '/:pathMatch(.*)*',       <sup>7</sup>
+      component: NotFound
+    }
+  ]
+});
+router.beforeEach((to, from, next) => {     <sup>4</sup>
+  if (to.name === 'about' && !to.query?.key) {
+    next({name: 'errorPage'})
+  }
+  else next();
+});
+router.afterEach((to, from) => {       <sup>5</sup>
+  if (to.name === 'about' && to.query?.user) {
+    user = to.query.user;
+  }
+});</pre>
+При создании сущности роутера передаем объект настроек:<br>
+1. указываем режим. В данном примере используется обычный режим позволяющий использовать history.push. Также есть createWebHashHistory который позволяет использовать # в роутах<br>
+2. в массив роутов передаются объекты. В каждом объекте указывается путь, имя для дальнейшего доступа а также компонент<br>
+3. в компоненте можно указать как сам компонент так и callback который вернет импорт нужного компонента тем самым оптимизировав приложение (lazy loading)<br>
+Далее необходимо подключить роутер в приложение<br>
+4. При создании роутера также можно использовать несколько глобальных middleware(beforeEach, afterEach, beforeResolve). Каждый метод объекта принимает callback в котором определены 3 аргумента:<br>
+-- объект роута куда, где можем получить доступ к таким свойствам как name, query и тд<br>
+-- объект роута откуда<br>
+-- функция next для передачи управления дальше<br>
+В данном примере мы проверяем перед каждым срабатыванием роута является ли путь === about и имеется ли key в запросе. Если нет то вызываем next передав объект с именем роута для переадресации<br>
+5. afterEach выполняется после роутинга поэтому callback внутри нее принимает только 2 аргумента, без next. Этот метод полезен если необходимо определить какие то данные. В данном случае проверяем был ли передан key в запросе и если нет определяем его значение<br>
+6. Метод vue-router позволяющий производить манипуляции в промежутке между навигацией и ререндером<br>
+7. Чтобы описать роут для несуществующего адреса используется следующая запись в поле path<br>
+8. Для построения вложенных роутов, на объекте роута указывается свойство children принимающее массив таких же объектов роута<br>
+main.js<pre>
+import router from ....;
+const app = createApp(App);
+app.use(router);
+app.mount('#root');</pre>
+После чего роутер можно использовать в разметке<br>
+App.vue<pre>
+&lt;template&gt;
+  &lt;nav&gt;
+    &lt;RouterLink to="/" active-class="myClass"&gt;Home&lt;/RouterLink&gt;
+    &lt;RouterLink to="{name: 'about'}"&gt;About&lt;/RouterLink&gt;
+  &lt;/nav&gt;
+  &lt;RouterView class="someClass" /&gt;
+&lt;/template&gt;</pre>
+RouterLink компонент обертка для ссылки. В проп to указывается или относительный путь или объект с именем роута. Лучше указывать объект т.к. в случае рефакторинга роутера это сильно облегчит задачу. Также этот компонент позволяет отследить текущую активную ссылку и добавляет класс active. Мы можем стилизовать его или указать свой класс передав его в виде пропса active-class<br>
+RouterView компонент который на основе роута будет рендерить указанный компонент. Ему также можно передать класс который будет потом добавлен главному элементу показываемого компонента<hr>
+Чтобы програмно изменить роут в Options API используется свойство $router на объекте this и метод push, который принимает или относительный путь или объект с именем роута<pre>
+export default {
+  methods: {
+    some() {
+      this.$router.push({name: 'about'})
+    }
+  },
+  beforeRouterLeave: (to, from, next) => {      <sup>1</sup>
+    const answer = window.confirm('Are u sure?');
+    next(!!answer);
+  }
+}</pre>
+1. метод предоставляемый роутером. Срабатывает перед навигацией. Принимает callback с 3 аргументами. Если в next передать отрицательное значение то навигация будет отменена. Также имеет доступ к объекту this. В Composition API называется onBeforeRouterLeave<br>
+В Composition API используется хук useRouter который возвращает объект, на котором потом можно вызвать нужный метод<pre>
+&lt;script setup&gt;
+const router = useRouter();
+function some() {
+  router.push({name: 'about'})
+}
+&lt;/script&gt;</pre><hr>
+Также роутер предоставляет возможность навигации назад и вперед с помощью метода go. Метод принимает в качестве аргумента целое число указывающее на сколько шагов и куда необходимо вернутся<br>
+<b>this.$router.go(-1)</b><hr>
+Роутер позволяет использовать запросы из адресной строки с помощью свойства query объекта route<pre>
+// /about?key=123
+
+const route = useRouter();
+const {key} = route.query;</pre><hr>
+С помощью роутера также можно передавать пропсы. Для этого на объекте описываемого роута используется свойство props, которое получает или значение или же callback в случае если необходимо получить доступ к объекту route<pre>
+export const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      path: '/some',
+      props: (route) => ({ user: route.query?.user || 'Bob' })
+    }
+  ]</pre>
+  Также можно использовать параметры в запросе<pre>
+// /user/21424
+// Composition API
+...
+const {params} = useRoute();
+// Options API
+export default {
+  mounted() {
+    console.log(this.$route.params.id)
+  }
+}</pre><hr>
+Создание layout для роутинга<br>
+Layout.vue<pre>
+&lt;template&gt;
+  &lt;h2&gt;Some title&lt;/h2&gt;
+  &lt;p&gt;Some text for layout&lt;/p&gt;
+  &lt;slot /&gt;
+&lt;/template&gt;</pre>
+Сначала создается layout разметка в которой указывается slot который в дальнейшем будет заменен на children компонент<br>
+App.vue<pre>
+&lt;template&gt;
+  &lt;component is="Layout"&gt;
+    &lt;RouterView /&gt;
+  &lt;/component&gt;
+&lt;/template&gt;</pre>
+Далее в главном компоненте определяется следующая разметка. Layout в виде динамического компонента и children props в виде RouterView`,
+  ],
+  [
+    `Анимация компонентов`,
+    `Vue из коробки позволяет задать анимацию появления/удаления компонентов. Для этого компонент оборачивается в специальный компонент &lt;transition&gt;. Ему необходимо указать проп name который будет своего рода идентификатором. После чего необходимо указать несколько классов для анимации<br>
+    1. name-enter/leave-from/to - класс с описанием начального состояния когда компонент еще не появился или как ему исчезнуть<br>
+    2. name-enter-active, name-leave-active - классы для указания скорости анимации. enter-active для появления, leave-active - исчезновения<pre>
+&lt;template&gt;
+  &lt;transition name="my"&gt;
+    &lt;h2&gt;Hello world&lt;/h2&gt;
+  &lt;/transition&gt;
+&lt;/template&gt;
+&lt;style scoped&gt;
+.my-enter-from,
+.my-leave-to {
+  opacity: 0;
+}
+.my-enter-active,
+.my-leave-active {
+  transition: opacity 2s ease-in;
+}
+&lt;/style&gt;</pre>
+Также можно использовать и keyframes<pre>
+&lt;style scoped&gt;
+@keyframes anima {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.my-enter-active {
+  animation: anima 1s;
+}
+.my-leave-active {
+  animation: anima 1s reverse;
+}
+&lt;/style&gt;</pre>
+Также можно указывать кастомные классы, для этого их необходимо передать в соответствующие пропсы - enter/leave-active-class, enter/leave-from/to-class<hr>
+Чтобы применить анимацию к группе компонентов используется встроенный компонент &lt;transition-group&gt;. Компонент также принимает пропс tag в виде имени тэга, если пропс передан то все содержимое будет обернуто в этот тэг. Чтобы анимация применялась также к изменению порядка компонентов указывается пропс move-class который принимает название класса с длительностью анимации<pre>
+&lt;template&gt;
+  &lt;transition-group name="my" move-class="my-move"&gt;
+    &lt;ul&gt;
+      ....
+    &lt;/ul&gt;
+  &lt;/transition-group&gt;
+&lt;/template&gt;
+&lt;style scoped&gt;
+...
+.my-move {
+  transition: all 1s;
+}
+&lt;/style&gt;</pre>
+Чтобы анимация проигрывалась при 1 рендере необходимо передать пропс appear="true"<hr>
+Чтобы создать анимацию для перехода по роутам используется связка RouterView и component<pre>
+&lt;RouterView v-slot="{Component, route}"&gt;
+  &lt;transition name="route.meta.transition || 'some'"&gt;
+    &lt;component :is="Component" /&gt;
+  &lt;/transition&gt;
+&lt;/RouterView&gt;</pre>
+RouterView предоставляет v-slot проп для взаимодействия с отображаемым компонентом а также объектом route. В данном примере имя для transition получаем из переданного свойства meta объекта роута<hr>
+Компоненту transition также можно указать проп mode=<br>
+out-in - новый компонент появится после исчезновения старого<br>
+in-out - старый компонент исчезнет после появления нового<br>
+Без указания mode анимация компонентов начнется одновременно`,
+  ],
+  [
     `Плагины`,
     `Плагины позволяют подключать сторонние библиотеки прямо в сущность приложения для того что минимизировать количество импортов в коде. При таком подключении библиотека становится доступна на объекте this<br>
     axiosPlug.js<pre>
@@ -380,7 +579,66 @@ export default {
     ...
   }
 }</pre>
-Далее в компоненте просто обращаемся к ранее указанному свойству на объекте this`
+Далее в компоненте просто обращаемся к ранее указанному свойству на объекте this`,
+  ],
+  [
+    `Динамические компоненты`,
+    `Для динамического рендера компонентов используется специальный компонент - &lt;component&gt;, который принимает пропс is с именем компонента который будет отрисован, самим компонентом или же тэгом. Options API<pre>
+export default {
+  components: {Card, Img},
+  data: () => ({
+    compName: 'Card'
+  })
+}
+&lt;template&gt;
+  &lt;input type="radio" name="comp" v-model="compName" value="card" :checked="compName === 'Card'" /&gt;
+  &lt;input type="radio" name="comp" v-model="compName" value="img" /&gt;
+  &lt;component :is="compName"&gt;
+&lt;/template&gt;</pre>
+Минус такого подхода что в случае unMount компонента все данные теряются(например данные внутри input). Чтобы избежать такого поведения &lt;component&gt; оборачивается в &lt;keep-alive&gt;<br>
+Composition API<pre>
+&lt;script setup&gt;
+  import Card from ...;
+  import Img from ...;
+  import {ref} from 'vue';
+  const compName = ref('Card');
+&lt;/script&gt;</pre>`,
+  ],
+  [
+    `Компоненты`,
+    `Компоненты можно зарегистрировать в точке входа приложения чтобы использовать их без импорта<br>
+    main.js<pre>
+import SomeComp from ...;
+const app = createApp(App);
+app.component('SomeComp', SomeComp);</pre><hr>
+Также компоненты можно описывать в виде js файла, где сам шаблон компонента создается в свойстве template<pre>
+export default {
+  ...
+  template: '&lt;div&gt;Hello&lt;/div&gt;
+}</pre>
+Но для использования такой записи необходимо обновить конфиг<br>
+vite.config.js<pre>
+export default defineConfig({
+  plugins: [vue()],
+  resolve: {
+    alias: {
+      "a": fileURLToPath(new URL('./src', import.meta.url)),
+      vue: "vue/dist/vue.esm-bundler.js"
+    }
+  }
+});</pre><hr>
+Также для создания шаблона можно использовать функцию render которая в свою очередь вернет вызов функции h<pre>
+export default {
+  render() {
+    return h('h2', 'Hello world')
+  }
+}</pre><hr>
+Также функция render может возвращать JSX разметку, но для этого необходимо указать при инициализации проекта что будет использоваться JSX<pre>
+export default {
+  render() {
+    return &lt;h2&gt;Hello world&lt;/h2&gt;
+  }
+}</pre>`,
   ],
   [
     `Миксины`,
