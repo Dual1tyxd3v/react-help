@@ -82,7 +82,9 @@ Composition API:<pre>
 const props = defineProps({
   count: Number
 })</pre>
-Используется метод который доступен без импорта. В него передаем объект с настройками пропсов как в Options API. На выходе полуаем объект props который содержит все полученые пропсы`,
+Используется метод который доступен без импорта. В него передаем объект с настройками пропсов как в Options API. На выходе полуаем объект props который содержит все полученые пропсы<hr>
+При использовании ссылочных типов данных в пропсах, получаемый компонент может мутировать данные. НО так делать не стоит<hr>
+Все пропсы по умолчанию опциональные и в случае если не были переданы имеют значение undefined/false`,
   ],
   [
     `Вычисляемые атрибуты элемента`,
@@ -100,7 +102,8 @@ const props = defineProps({
   ....
 &lt;template v-else&gt;
   ....
-&lt;/template&gt;</pre>`,
+&lt;/template&gt;</pre>
+Использовать v-if и v-for на 1 элементе не рекомендуется. Если все таки это произошло то приоритет сначала у v-if`,
   ],
   [
     `Директива v-show`,
@@ -151,7 +154,85 @@ App.vue<pre>
   &lt;MyComponent&gt;
     &lt;p #someName="wrapper"&gt;Text with {{ wrapper.someVariable }}&lt;/p&gt;
   &lt;/MyComponent&gt;
-&lt;/template&gt;</pre>`,
+&lt;/template&gt;</pre>
+В слотах также можно использовать динамические имена<pre>
+&lt;template v-slot:[someVar]&gt;...&lt;/template&gt;
+&lt;template #[someVar]&gt;...&lt;/template&gt;</pre>`,
+  ],
+  [
+    `provide/inject`,
+    `Чтобы передать данные от родителя к далекому child без prop drilling используется связка provide/inject(что то вроде context в react). Сначала в родительском компоненте указывается какие данные должны быть переданы<br>
+    Composition<pre>
+import {provide, ref} from 'vue';
+const x = ref(0);
+provide('xName', x);</pre>
+Options API<pre>
+export default {
+  data: () => ({x: 0}),
+  provide() {
+    return { xName: this.x }
+  }
+}</pre>
+При этом в Options API передаваемые данные по умолчанию не будут реактивными<br>
+Далее в получаемом компоненте используем функцию inject<br>
+Composition API<pre>
+import {inject, onMounted} from 'vue';
+const xName = inject('xName');
+onMounted(() => {
+  console.log(xName.value);
+});</pre>
+Если было передано ref значение то оно не распаковывается по умолчанию<br>
+Optsions API<pre>
+export default {
+  inject: ['xName'],
+  data: () => ({
+    x: xName
+  })
+}</pre>
+В Options API inject выполняется перед инициализацией data, поэтому там можно использовать полученные данные<hr>
+Чтобы указать значение по умолчанию в Composition API передается 2 аргумент в виде примитива или callback который вернет ссылочный тип данных(если 2 аргумент callback то также нужно передать 3 аргумент в виде true, чтобы указать что это фабричная функция):
+<b>const some = inject('someName', () => ({ name: 'Bob' }), true);</b><br>
+В Options API вместо массива указывается объект где ключ - имя переменной а значение объект с настройками<pre>
+export default {
+  inject: {
+    someName: {
+      default: () => ({ name: 'Bob' })
+    }
+  }
+}</pre>
+Также в Options API мы можем изменить имя получаемой переменной, для этого указываем нужное имя а в объекте настроек указываем поле from с оригинальным именем<pre>
+export default {
+  inject: {
+    localName: {
+      from: globalName
+    }
+  }
+}</pre><hr>
+Чтобы у получаемых компонентов была возможность мутировать данные, в родительском также создается специальная функция и передается в provide<pre>
+<b>App.vue</b>
+const data = ref(0);
+function updater(v) {
+  data.value = v;
+}
+provide('some', { data, updater });
+<b>Child.vue</b>
+const { data, updater } = inject('some');</pre>
+А чтобы запретить мутации то переданное значение в provide оборачивается в специальную функцию vue - readonly<pre>
+import {readonly, provide, ref} from 'vue';
+const data = ref(true);
+provide('some', readonly(data));</pre>
+Для создания реактивной связи с переданным значение в Options API используется отдельная функция computed<pre>
+import {computed} from 'vue';
+export default {
+  data: () => ({ count: 0 }),
+  provide() {
+    return {
+      someVar: computed(() => this.count)
+    }
+  }
+}</pre><hr>
+Чтобы использовать Symbol в виде ключа сначала создается отдельный файл с экспортируемыми ключами а затем просто импортируются в нужные компоненты<br>
+<b>export const someKey = Symbol();</b>`,
   ],
   [
     `События`,
@@ -165,7 +246,12 @@ App.vue<pre>
     <b>&lt;a @click="handler"&gt;</b> - использование обработчика. По умолчанию ф-ция получает в виде аргуемнта объект на котором произошло событие<br>
     <b>&lt;a @click="this.count++"&gt;</b> - можно напрямую указать выражение<br>
     <b>&lt;a @click.prevent="handler"&gt;</b> - также можно сразу указать модификаторы через @имя_события.модификатор. Например отменить стандартное поведение(preventDefault) или указать определенную клавишу при нажатии (@keyup.enter="...")<br>
-    <b>&lt;a @click="handler('myArgument', $event)"&gt;</b> - в случае если необходимо передать свои аргументы то сначала передаются кастомные а в конце $event в виде объекта события`,
+    <b>&lt;a @click="handler('myArgument', $event)"&gt;</b> - в случае если необходимо передать свои аргументы то сначала передаются кастомные а в конце $event в виде объекта события<hr>
+    Модификаторы событий могут быть вызваны по цепочке<br>
+    <b>&lt;button @click.stop.prevent="hanlder"&gt;Click&lt;/button&gt;</b><br>
+    <b>.self</b> - модификатор указывает что обработчик должен быть вызван только если событие произошло именно на этом элементе<br>
+    <b>.exact</b> - указывает что событие должно сработать только если было строгое соответствие правил(например нажатие определенных клавиш)<br>
+    <b>&lt;button @click.exact.ctrl.alt="handler"&gt;</b> - данное событие отработает только если при клике были нажаты ctrl + alt и ничего больше`,
   ],
   [
     `Циклический рендеринг`,
@@ -173,7 +259,8 @@ App.vue<pre>
     <b>&lt;li v-for="(item, i) in someArray" :key="\`li_\${item.id}\`"&gt;{{ item.name }}&lt;/li&gt;</b><br>
     Также можно производить рендер по числовому значению<br>
     <b>&lt;li v-for="n in 10" :key="n"&gt;{{n}}&lt;/li&gt;</b><br>
-    !!! В случае рендера по пустому массиву в разметке все равно окажется 1 пустой элемент, чтобы избежать такого поведения следует на родительском контейнере сначала проверять наличие данных`,
+    !!! В случае рендера по пустому массиву в разметке все равно окажется 1 пустой элемент, чтобы избежать такого поведения следует на родительском контейнере сначала проверять наличие данных<hr>
+    При циклическом рендере можно не боятся менять данные целиком т.к. vue оптимизировн в этом плане`,
   ],
   [
     `Реактивные данные`,
@@ -191,7 +278,23 @@ function some() {
   console.log(colors);
 }
 &lt;/script&gt;</pre>
-Также можно использовать shallowRef. Эта функция полезна если будет использоваться ссылочный тип который со времен будет изменяться полностью т.к. она отслеживает только поверхностные изменения`,
+Также можно использовать shallowRef. Эта функция полезна если будет использоваться ссылочный тип который со времен будет изменяться полностью т.к. она отслеживает только поверхностные изменения<hr>
+При обновлении реактивных данных vue сначала смотрит какие данные еще необходимо обновить и только потом делает ререндер чтобы избежать частых перерисовок<hr>
+Реактивные данные в vue по сути оборачиваются в объект, потому что примитивные значения отследить не возможно. Вот так примерно выглядит ref<pre>
+myRef = {
+  _value: 0,
+  get value() {
+    track();      <sup>1</sup>
+    return this._value;
+  },
+  set value(v) {
+    this._value = v;
+    trigger();        <sup>2</sup>
+  }
+}</pre>
+1. Псевдофункция начинающая отслеживание переменной<br>
+2. Псевдофункция запускающая ререндер<br>
+reactive в отличии от ref не оборачивает данные в объект а превращает переданные данные в отслеживаемый объект. Также переданные данные в reactive передаются не по ссылке а делается глубокая копия`,
   ],
   [
     `Computed properties`,
@@ -229,11 +332,19 @@ const fullAge = computed({      <sup>2</sup>
 })
 &lt;/script&gt;</pre>
 1. По умолчанию если передать callback то computed служит только как геттер<br>
-2. Чтобы иметь возможность передавать значения необходимо указать объект с сеттером и геттером`,
+2. Чтобы иметь возможность передавать значения необходимо указать объект с сеттером и геттером<hr>
+Если необходимо получить значение computed в блоке логики то оно хранится в свойсте value как у ref<pre>
+const someComputed = computed(() => ...);
+onMounted(() => {
+  console.log(someComputed.value);
+});</pre><hr>
+В случае если необходимо мутировать изначальный объект то сначала стоит сделать его копию чтобы избежать проблем<pre>
+const arr = ref([1, 2, 3]);
+const comp = computed(() => [...arr.value].reverse());</pre>`,
   ],
   [
     `Watch`,
-    `Механизм служит для отслеживания изменений определенных данных с последующим выполнением процедур. В Options API:<pre>
+    `Механизм служит для отслеживания изменений определенных данных с последующим выполнением процедур. Используется если необходимо выполнить какие то side эффекты(async, localstorage, DOM манипуляции). В Options API:<pre>
 export default {
   data: () => ({
     count: 0,
@@ -252,7 +363,7 @@ export default {
     count(newValue, oldValue) {       <sup>1</sup>
       ...do something
     },
-    date: 'onClick'       <sup>2</sup>
+    date: 'onClick',       <sup>2</sup>
     'obj.x'() {         <sup>3</sup>
       ...do something
     },
@@ -261,7 +372,8 @@ export default {
         ...do something
       },
       immediate: true,
-      deep: true
+      deep: true,
+      once: true
     }
   }
 }</pre>
@@ -270,7 +382,9 @@ export default {
 3. Если нужно отслеживать определенное свойство объекта можно в '' указать его<br>
 4. Также можно указать объект с более детальными настройками<br>
 -- handler функция обработчик<br>
--- immediate - указывает что обработчик необходимо выполнить при 1 рендере<hr>
+-- immediate - указывает что обработчик необходимо выполнить при 1 рендере<br>
+-- deep - указывает что нужно глубокое отслеживание(default = false)<br>
+-- once - указывает что обработчик будет запущен только раз<hr>
 В Composition API<pre>
 &lt;script setup&gt;
 const count = ref(0);
@@ -279,7 +393,68 @@ watch(count, (newV, oldV) => {
 }, {immediate: true});
 &lt;/script&gt;</pre>
 Просто вызывается как ф-ция где получает в виде 1 аргумента отслеживаемую переменную, а в виде 2 callback с необходимой логикой. 3 аргумент объект с настройками. Если необходимо отслеживать свойство объекта то тогда нужно указать callback который вернет это свойство<br>
-<b>watch(() => obj.someProp, () => ...);</b>`,
+<b>watch(() => obj.someProp, () => ...);</b><br>
+<b>watch([count, () => obj.someProp], () => ...);</b> - также в качестве 1 аргумента может принимать массив который может содержать переменные или функцию геттер<hr>
+В Options API watch с immediate true выполняется до хука created. Также по default watch срабатывает после обновления родителя и до обновления самого компонента<hr>
+В Composition API если watch и watchEffect были созданы в синхронном коде то они автоматически привязываются к сущности компонента и при unMount удаляются. Но если они были созданы в async коде(например в таймере) то привязки не будет. Поэтому удалять придется в ручную<pre>
+let w = null;
+setTimeout(() => w = watch(...), 100);
+onUnMounted(() => w());</pre>
+Удаление наблюдателя происходит с помощью вызова возвращаемой watch функции`,
+  ],
+  [
+    `watchEffect`,
+    `Функция vue для Composition API, похожа на watch. Только callback будет выполняться в случае если используемые внутри нее реактивные данные изменяются(как useEffect с массивом зависимостей). Если используется async callback то отслеживаться будут только те переменные которые были прочитаны до 1 тика ожидания await. Такой подход удобен если необходимо отслеживать сразу несколько реактивных данных<pre>
+const var1 = ref(0);
+const var2 = ref(true);
+watchEffect(() => {
+  if (var2.value) {
+    var1.value++;
+  }
+});</pre>`,
+  ],
+  [
+    `Наследование атрибутов`,
+    `Если компонент содержит 1 root элемент с определенным набором классов/атрибутов, а затем мы используем этот компонент указав дополнительный класс/атрибут, то они будут смерджены. В приоритете сначала идут классы из разметки компонента а затем класс переданный при его использовании<pre>
+<b>Child.vue</b>
+...
+&lt;input class="myClass" /&gt;
+...
+<b>App.vue</b>
+...
+&lt;Child class="anotherClass" /&gt;  // => &lt;input class="myClass anotherClass" /&gt;</pre>
+Если у компонента нет общего root элемента то мы можем указать явно какой элемент должен получить передаваемый класс/атрибуты с помощью $attrs<pre>
+<b>Child.vue</b>
+&lt;template&gt;
+  &lt;input class="some" :class="$attrs" /&gt;
+  &lt;input class="another" /&gt;
+&lt;/template&gt;</pre><hr>
+В случае использования одинаковых события при использовании компонента и в его разметке, оба события будут запущены<hr>
+Если компоненту передаются атрибуты, а в этом компоненте всего 1 другой компонент, то атрибуты будут переданы последнему<pre>
+<b>LastChild.vue</b>
+...
+&lt;input class="myClass" /&gt;
+<b>Child.vue</b>
+...
+&lt;LastChild /&gt;
+<b>App.vue</b>
+...
+&lt;Child class="fromParent" /&gt;</pre>
+На выходе получим <b>&lt;input class="myClass fromParent" /&gt;</b><hr>
+Чтобы отключить наследование атрибутов:<br>
+Options API - inheritAttrs: false<br>
+Composition API - defineOptions({ inheritAttrs: false });<br>
+Чтобы переданные атрибуты использовать не на root элементе сначала указывается опция inheritAttrs в false, а затем с помощью v-bind на нужном элементе указывается $attrs<pre>
+<b>Child.vue</b>
+defineOptions({ inheritAttrs: false });
+...
+&lt;div&gt;
+  &lt;input v-bind="$attrs" /&gt;
+&lt;/div&gt;</pre>
+В случае если переданы атрибуты в компонент у которого нет root элемента будет получена ошибка пока явно не будет указано какой элемент должнен их использовать<hr>
+Чтобы получить доступ к объекту с атрибутами можно:<br>
+Options API - использовать this.$attrs<br>
+Composition API - использовать хук useAttrs который вернет объект`,
   ],
   [
     `Динамические классы`,
@@ -299,17 +474,20 @@ const getClass = computed(() => ({
   &lt;p :class="[class1, class2]"&gt;Text&lt;/p&gt;
   &lt;p :class="{ 'class1': isActive }"&gt;Text&lt;/p&gt;
   &lt;p :class="getClass"&gt;Text&lt;/p&gt;
+  &lt;p :class="['someClass', {'anotherClass': isActive}]"&gt;Text&lt;/p&gt;
 &lt;/template&gt;</pre>
 В директиву можно передать разные значения:<br>
 1. напрямую указав переменную содержащую название класса<br>
 2. указать массив с переменными если классов несколько<br>
 3. если наличие класса зависит от какого то состояния можно передать объект где свойство - имя переменной с классом в '' а значение переменная с состоянием<br>
-4. чтобы не засорять разметку 3 способ можно вынести отдельно в метод`,
+4. чтобы не засорять разметку 3 способ можно вынести отдельно в метод<br>
+5. также можно комбинировать. Например передать массив который будет содержать и просто классы и объект с условным классом`,
   ],
   [
     `Динамические стили`,
     `Для использования вычисляемых стилей используется директива :style куда помещается объект. Свойства объекта это свойства стилей а значения - значение свойств<br>
-    <b>&lt;div :style="{color: colorArray[0]}"&gt;</b>`,
+    <b>&lt;div :style="{color: colorArray[0]}"&gt;</b><br>
+    Также при использовании динамических стилей vue проверяет поддерживает ли браузер стили и если нет добавляет префиксы`,
   ],
   [
     `Передача данных из дочернего компонента родителю`,
@@ -340,7 +518,15 @@ function handler() {
 &lt;/script&gt;</pre>
 Здесь также сначала регистрируем события с помощью defineEmits указав массив с именами. А затем с помощью полученной функции можем вызывать их<br>
 Далее в родителе на дочернем элементе подписываемся на событие и описываем обработчик который по умолчанию получает payload если были переданы<br>
-<b>&lt;MyComponent @myEvent="(v) => console.log(v)" /&gt;</b>`,
+<b>&lt;MyComponent @myEvent="(v) => console.log(v)" /&gt;</b><hr>
+В emits/defineEmits можно также передать объект где ключ это название события а значение - функция валидатор, которая должна вернуть boolean значение<pre>
+const emits = defineEmits({
+  submit: (name) => {
+    if (name) return true;
+    return false;
+  }
+});</pre><hr>
+В случае если кастомное событие имеет тоже имя что и native event то он будет перезаписан`,
   ],
   [
     `Кастомные хуки`,
@@ -710,7 +896,8 @@ Composition API<pre>
     main.js<pre>
 import SomeComp from ...;
 const app = createApp(App);
-app.component('SomeComp', SomeComp);</pre><hr>
+app.component('SomeComp', SomeComp);</pre>
+При глобальной регистрации компонентов, даже если они нигде не используются они все равно попадают в bundle. Также это можем привести к проблеме слишком много переменных в больших приложениях<hr>
 Также компоненты можно описывать в виде js файла, где сам шаблон компонента создается в свойстве template<pre>
 export default {
   ...
@@ -738,7 +925,29 @@ export default {
   render() {
     return &lt;h2&gt;Hello world&lt;/h2&gt;
   }
-}</pre>`,
+}</pre><hr>
+Компонент также может быть загружен асинхронно. Для этого в Options API<pre>
+import Loader from ...;
+import Error from ...;
+export default {
+  components: {
+    SomeComponent: defineAsyncComponent({
+      loader: () => import './SomeComponent.vue',
+      loadingComponent: Loader,
+      delay: 200,
+      errorComponent: Error,
+      timeout: 3000
+    })
+  }
+}</pre>
+В Composition API<br>
+<b>const SomeComponent = defineAsyncComponent({ -||- })</b><br>
+В функцию передается объект или напрямую callback с импортом компонента<br>
+loader - свойство для callback в которой происходит импорт загружаемого компонента<br>
+loadingComponent - тут указывается компонент заглушка на время загрузки<br>
+delay - задержка перед показом заглушки, чтобы избежать эффекта фликера при быстром интернете<br>
+errorComponent - тут указывается компонент который будет отображен в случае ошибки при загрузки<br>
+timeout - время для загрузки компонента(def = infinity)`,
   ],
   [
     `Миксины`,
@@ -769,7 +978,91 @@ const colors = ref([]);
     &lt;input type="checkbox" name="color" value="blue" v-model="colors" /&gt;
 &lt;/template&gt;</pre>
 Также можно использовать модификатор с типом данных который будет автоматически преобразовывать полученные данные в этот тип<br>
-<b>&lt;input type="text" v-model.Number="someInput" /&gt;</b>`,
+<b>&lt;input type="text" v-model.Number="someInput" /&gt;</b><hr>
+При двустороннем связывании с select следует 1 option сделать disabled с пустым значением. Это делается потому что если изначально ни 1 значение не совпадает со значением в переменной, на iOS будет невозможно выбрать 1 элемент списка из-за того что не сработает событие change<pre>
+&lt;select v-model="some"&gt;
+  &lt;option value="" disabled&gt;Select something&lt;/option&gt;
+&lt;/select&gt;</pre><hr>
+В случае если используется привязка к checkbox и планируется использовать не boolean данные можно использовать на элементе встроенные vue атрибуты чтобы явно указать true и false значения<pre>
+const check = ref('yes');
+....
+&lt;input type="checkbox" v-model="check" true-value="yes" false-value="no" /&gt;</pre><hr>
+Также мы можем установить двухстороннюю привязку данных между родительским и дочерним компонентом. Для этого используется макрос defineModel<pre>
+<b>Child.vue</b>
+const model = defineModel();
+...
+&lt;input v-model="model" /&gt;
+<b>App.vue</b>
+const input = ref('');
+...
+&lt;Child v-model="input" /&gt;</pre>
+Без макроса это выглядило бы так<pre>
+<b>Child.vue</b>
+const props = defineProps(['input']);
+const emits = defineEmits(['upd:input']);
+...
+&lt;input :value="props.input" @input="emits('upd:input', $event.target.value)" /&gt;
+<b>App.vue</b>
+const input = ref('');
+...
+&lt;Child @'upd:input'="(v) => input.value = v" :input /&gt;</pre>
+По сути defineModel делает связку с пропсом и создает кастомное событие на обновлении данных. Также может принимать объект настроек<br>
+<b>const model = defineModel({ default: '' });</b><br>
+Чтобы создать несколько таких привязок на 1 компоненте используются аргументы<pre>
+<b>Child.vue</b>
+const input = defineModel('input');
+const some = defineModel('some');
+...
+&lt;input v-model="input" /&gt;
+&lt;input v-model="some" /&gt;
+<b>App.vue</b>
+const input = ref('');
+const some = ref(0);
+...
+&lt;Child v-model:input="input" v-model:some="some" /&gt;</pre>
+Также можно создавать кастомные модификаторы. Composition API<pre>
+<b>Child.vue</b>
+const [model, modifiers] = defineModel({    <sup>1</sup>
+  set(v) {        <sup>2</sup>
+    if (modifiers.capitilize) {       <sup>3</sup>
+      return v.charAt(0).toUpperCase() + v.slice(1);
+    }
+    return v;
+  }
+});
+<b>App.vue</b>
+...
+&lt;Child v-model.capitalize="someVar" /&gt;    <sup>4</sup></pre>
+1. результатом выполнения макроса в таком случае будет массив где 1 элемент значение, 2 объект с модификаторами<br>
+2. внутри макроса указываем объект с get/set, где set получает в виде аргумента новое значение<br>
+3. внутри самого метода у нас есть доступ к объекту модификатора<br>
+4. на родителе просто указываем имя кастомного модификатора<br>
+Options API<pre>
+export default {
+  props: {
+    some: Number,
+    input: String,
+    someModifiers: {
+      default: () => ({})
+    },
+    inputModifiers: {
+      default: () => ({})
+    }
+  },
+  emits: ['upd:input', 'upd:some'],
+  methods: {
+    handler(e) {
+      let v = e.target.value;
+      if (this.inputModifiers.capitilize) {
+        v = v.charAt(0).toUpperCase() + v.slice(1);
+      }
+      this.$emit('upd:input', v);
+    }
+  }
+}
+...
+&lt;input :value="props.input" @input="handler" /&gt;</pre>
+Модификаторы по сути являются теми же пропсами в виде объекта где ключ это имя модификатора а значение boolean(true если передан). Поэтому в пропсах указываем дефолтное значение чтобы избежать ошибок`,
   ],
   [
     `Взаимодействие с DOM напрямую`,
@@ -792,13 +1085,62 @@ function someClicker() {
   console.log(myP.value);
 }
 &lt;/script&gt;</pre>
-В данном случае сначала регистрируется реактивная переменная с начальным значением null(потому что во время инициализации шаблон еще не готов). Затем чтобы получить доступ к элементу нужно как обычно обратится к value на указанной переменной`,
+В данном случае сначала регистрируется реактивная переменная с начальным значением null(потому что во время инициализации шаблон еще не готов). Затем чтобы получить доступ к элементу нужно как обычно обратится к value на указанной переменной<hr>
+При использовании ref атрибута вместе с v-for, ref должен ссылаться на массив. Но в дальнейшем порядок в этом массиве может не совпадать с порядком массива v-for<pre>
+const items = ref([...]);
+const refItems = ref([]);
+...
+&lt;li v-for="(item, i) in items" :key="i" ref="refItems"&gt;{{ item }}&lt;/li&gt;</pre><hr>
+В Options API если ref используется на компоненте, то всего его методы и данные становятся доступны на родительском компоненте. Чтобы ограничить доступ необходимо использовать свойство expose принимающее массив с именами нужных данных/функций<pre>
+export default {
+  data: () => ({
+    privateData: 4,
+    publicData: true
+  }),
+  expose: ['publicData']
+}</pre>
+В Composition API все данные по умолчанию приватные. Чтобы сделать их доступными используется макрос defineExpose в который необходимо передать объект с нужными данными<pre>
+const var = ref(4);
+function doSome() {...}
+defineExpose({ var, doSome });</pre>`,
   ],
   [
     `Инициализация приложения`,
-    `В главном файле сначала создается сущность приложения с помощью метода Vue createApp в который можно передать объект настроек. А затем на ней вызывается метод mount с передачей в него селектора с корневым элементом<pre>
+    `В главном файле сначала создается сущность приложения с помощью метода Vue createApp в который можно передать объект настроек или корневой компонент. А затем на ней вызывается метод mount с передачей в него селектора с корневым элементом<pre>
 const app = Vue.createApp({...});
-app.mount('#root');</pre>`,
+app.mount('#root');</pre>
+Также можно создать несколько приложений на 1 странице<pre>
+const app1 = createApp(AppFirst);
+const app2 = createApp(AppSecond);
+app1.mount('#root1');
+app.2mount('#root2');</pre>`,
+  ],
+  [
+    `Директива v-bind`,
+    `Позволяет связать данные из логики с компонентом<pre>
+&lt;script setup&gt;
+const attrs = {
+  id: 'some',
+  class: 'block'
+}
+&lt;/script&gt;
+&lt;MyComponent v-bind="someData" /&gt;
+&lt;MyComponent v-bind:id="computedId" /&gt;    <sup>1</sup>
+&lt;MyComponent :id="computedId" /&gt;      <sup>2</sup>
+&lt;MyComponent :id /&gt;       <sup>3</sup>
+&lt;MyComponent v-bind="attrs" /&gt;    <sup>4</sup></pre>
+1. При вычисляемых значениях атрибутов/пропсов используется также v-bind:<br>
+2. Сокращенная запись<br>
+3. В случае если название переменной совпадает с именем атрибута/пропса можно опустить присваивание<br>
+4. Также можем очистить разметку сократив запись атрибутов. Для этого создаем объект который будет хранить нужные атрибуты с нужным значениями а затем с помощью v-bind можем привязать его к компоненту<hr>
+Также если необходимо передать много пропсов в компонент мы можем передать их разом используя v-bind<pre>
+const myProps = {
+  name: 'Some',
+  count: 4,
+  isActive: false
+};
+...
+&lt;SomeComponent v-bind="myProps" /&gt;</pre>`,
   ],
   [
     `Директива v-text`,
@@ -812,7 +1154,8 @@ app.mount('#root');</pre>`,
   ],
   [
     `Директива v-html`,
-    `Позволяет вставить внутрь html разметку. Данный подход устарел и является не безопасным`,
+    `Позволяет вставить внутрь html разметку. Данный подход устарел и является не безопасным<br>
+    <b>&lt;div v-html="&lt;p&gt;Hello world&lt;/p&gt;"&gt;&lt;/div&gt;</b>`,
   ],
   [
     `Жизненные циклы компонента`,

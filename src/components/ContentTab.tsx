@@ -57,6 +57,11 @@ const Content = styled.div<ContentProps>`
     text-align: center;
   }
 
+  & pre b {
+    color: #c42020;
+    text-decoration: underline;
+  }
+
   ${(props) =>
     props.active === 'active' &&
     css`
