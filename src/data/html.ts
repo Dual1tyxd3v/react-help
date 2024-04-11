@@ -97,7 +97,7 @@ some text...
   ],
   [
     `Тэг datalist`,
-    `Тэг для отображения выпадающего списка<pre>
+    `Тэг для отображения выпадающего списка с фильтрацией при вводе данных в input<pre>
 &lt;input list="ice-cream-flavors" id="ice-cream-choice" name="ice-cream-choice"&gt;
 &lt;datalist id="ice-cream-flavors"&gt;
   &lt;option value="Chocolate"&gt;
